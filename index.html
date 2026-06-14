@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Калькулятор вышивки</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --nude: #f5ede6;
+      --rose: #e8c4b8;
+      --deep-rose: #c9917e;
+      --gold: #c8a97e;
+      --dark: #3d2b24;
+      --gray: #9e8880;
+      --light: #fdf8f5;
+      --white: #ffffff;
+      --green: #d4ead0;
+      --green-text: #3a7a35;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--light);
+      color: var(--dark);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--white);
+      border-bottom: 1px solid var(--rose);
+      padding: 28px 24px 20px;
+      text-align: center;
+    }
+    .logo-dot {
+      width: 10px; height: 10px;
+      background: var(--deep-rose);
+      border-radius: 50%;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+    header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 32px;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      color: var(--dark);
+    }
+    header h1 span { font-style: italic; color: var(--deep-rose); }
+    header p {
+      font-size: 13px;
+      color: var(--gray);
+      margin-top: 6px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    main {
+      max-width: 580px;
+      margin: 0 auto;
+      padding: 32px 16px 60px;
+    }
+
+    .step { display: none; animation: fadeIn 0.35s ease; }
+    .step.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gray);
+      margin-bottom: 16px;
+    }
+
+    /* PROGRESS */
+    .progress { display: flex; gap: 6px; margin-bottom: 28px; }
+    .progress-dot {
+      height: 4px; flex: 1; border-radius: 2px;
+      background: var(--rose); transition: background 0.3s;
+    }
+    .progress-dot.done { background: var(--deep-rose); }
+
+    /* FABRIC CARDS */
+    .fabric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    .fabric-card {
+      background: var(--white);
+      border: 1.5px solid var(--rose);
+      border-radius: 14px;
+      padding: 18px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .fabric-card:hover { border-color: var(--deep-rose); transform: translateY(-2px); }
+    .fabric-card.selected {
+      border-color: var(--deep-rose);
+      background: var(--nude);
+      box-shadow: 0 4px 16px rgba(201,145,126,0.15);
+    }
+    .fabric-card .icon { font-size: 26px; margin-bottom: 8px; }
+    .fabric-card .name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16px; font-weight: 500;
+      color: var(--dark);
+    }
+    .fabric-card .hint { font-size: 11px; color: var(--gray); margin-top: 4px; }
+
+    /* FORM CARD */
+    .form-card {
+      background: var(--white);
+      border: 1px solid var(--rose);
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 16px;
+    }
+    .form-card-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      margin-bottom: 16px;
+      color: var(--dark);
+    }
+
+    .field { margin-bottom: 16px; }
+    .field:last-child { margin-bottom: 0; }
+    .field label {
+      display: block;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gray);
+      margin-bottom: 8px;
+    }
+    .field input[type="number"] {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid var(--rose);
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--dark);
+      background: var(--light);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .field input[type="number"]:focus { border-color: var(--deep-rose); }
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* RANGE */
+    .range-value {
+      text-align: center;
+      font-size: 24px;
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 500;
+      color: var(--deep-rose);
+      margin-bottom: 8px;
+    }
+    input[type="range"] {
+      width: 100%;
+      -webkit-appearance: none;
+      height: 4px;
+      background: var(--rose);
+      border-radius: 2px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--deep-rose);
+      cursor: pointer;
+      border: 3px solid var(--white);
+      box-shadow: 0 2px 8px rgba(201,145,126,0.4);
+    }
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--gray);
+      margin-top: 5px;
+    }
+
+    /* TOGGLE */
+    .toggle-group { display: flex; gap: 8px; }
+    .toggle-btn {
+      flex: 1;
+      padding: 11px;
+      border: 1.5px solid var(--rose);
+      border-radius: 10px;
+      background: var(--white);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--gray);
+    }
+    .toggle-btn.active {
+      border-color: var(--deep-rose);
+      background: var(--nude);
+      color: var(--dark);
+      font-weight: 500;
+    }
+
+    /* BUTTONS */
+    .btn {
+      width: 100%;
+      padding: 15px;
+      background: var(--deep-rose);
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      margin-top: 4px;
+    }
+    .btn:hover { background: #b8806d; transform: translateY(-1px); }
+    .btn:disabled { background: var(--rose); cursor: not-allowed; transform: none; }
+    .btn-back {
+      background: none;
+      border: 1.5px solid var(--rose);
+      color: var(--gray);
+      margin-bottom: 10px;
+    }
+    .btn-back:hover { background: var(--nude); border-color: var(--deep-rose); color: var(--dark); }
+    .btn-ghost {
+      background: var(--nude);
+      color: var(--dark);
+      border: 1.5px solid var(--rose);
+      margin-top: 10px;
+    }
+    .btn-ghost:hover { border-color: var(--deep-rose); background: #eee3db; }
+
+    /* RESULT GRID */
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .result-card {
+      background: var(--white);
+      border: 1px solid var(--rose);
+      border-radius: 16px;
+      padding: 18px 14px;
+      text-align: center;
+    }
+    .result-card.wide {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-align: left;
+      padding: 20px 22px;
+    }
+    .result-card.highlight {
+      border-color: var(--deep-rose);
+      background: var(--nude);
+    }
+    .result-card .r-icon { font-size: 26px; margin-bottom: 8px; }
+    .result-card .r-label {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gray);
+      margin-bottom: 6px;
+    }
+    .result-card .r-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--dark);
+      line-height: 1.1;
+    }
+    .result-card .r-sub { font-size: 12px; color: var(--gray); margin-top: 5px; }
+    .result-card.wide .r-value { font-size: 34px; color: var(--deep-rose); }
+
+    /* DETAIL TABLE */
+    .detail-table {
+      background: var(--white);
+      border: 1px solid var(--rose);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .detail-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      margin-bottom: 14px;
+      color: var(--dark);
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 9px 0;
+      border-bottom: 1px solid #f0e8e4;
+    }
+    .detail-row:last-child { border-bottom: none; font-weight: 600; }
+    .detail-row .k { color: var(--gray); }
+    .detail-row .v { font-weight: 500; }
+    .detail-row:last-child .v { color: var(--deep-rose); font-size: 15px; }
+
+    /* BADGE */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--green);
+      color: var(--green-text);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-top: 8px;
+    }
+
+    /* TIP */
+    .tip {
+      background: #fff8f0;
+      border: 1px solid var(--gold);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: #7a5c3a;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .tip b { color: var(--dark); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-dot"></div>
+  <h1>Калькулятор <span>вышивки</span></h1>
+  <p>Нитки · Стабилизатор · Себестоимость</p>
+</header>
+
+<main>
+
+  <!-- ШАГ 1: Параметры дизайна -->
+  <div class="step active" id="step1">
+    <div class="progress">
+      <div class="progress-dot done"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+    </div>
+    <p class="section-label">Шаг 1 из 3 — Параметры дизайна</p>
+
+    <div class="form-card">
+      <div class="form-card-title">Количество стежков</div>
+      <div class="field">
+        <div class="range-value" id="stitchVal">10 000</div>
+        <input type="range" id="stitchRange" min="500" max="100000" step="500" value="10000"
+          oninput="syncStitch(this.value, 'range')" />
+        <div class="range-labels"><span>500</span><span>100 000</span></div>
+      </div>
+      <div class="field">
+        <label>Или введите точное число</label>
+        <input type="number" id="stitchInput" min="500" max="200000" value="10000" placeholder="Например, 15 000"
+          oninput="syncStitch(this.value, 'input')" />
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-title">Размер дизайна</div>
+      <div class="field field-row">
+        <div>
+          <label>Ширина (мм)</label>
+          <input type="number" id="designW" min="10" max="500" value="100" placeholder="100" />
+        </div>
+        <div>
+          <label>Высота (мм)</label>
+          <input type="number" id="designH" min="10" max="500" value="80" placeholder="80" />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-title">Количество цветов нитей</div>
+      <div class="field">
+        <div class="range-value" id="colorVal">3</div>
+        <input type="range" id="colorRange" min="1" max="20" step="1" value="3"
+          oninput="document.getElementById('colorVal').textContent = this.value" />
+        <div class="range-labels"><span>1 цвет</span><span>20 цветов</span></div>
+      </div>
+    </div>
+
+    <button class="btn" onclick="goTo(2)">Далее — Тип ткани →</button>
+  </div>
+
+  <!-- ШАГ 2: Тип ткани -->
+  <div class="step" id="step2">
+    <div class="progress">
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot"></div>
+    </div>
+    <p class="section-label">Шаг 2 из 3 — Тип ткани</p>
+
+    <div class="fabric-grid">
+      <div class="fabric-card" onclick="selectFabric(this, 'cotton')">
+        <div class="icon">👕</div>
+        <div class="name">Хлопок / Лён</div>
+        <div class="hint">Отрывной стабилизатор</div>
+      </div>
+      <div class="fabric-card" onclick="selectFabric(this, 'knit')">
+        <div class="icon">🧶</div>
+        <div class="name">Трикотаж / Флис</div>
+        <div class="hint">Клеевой + отрезной</div>
+      </div>
+      <div class="fabric-card" onclick="selectFabric(this, 'cap')">
+        <div class="icon">🧢</div>
+        <div class="name">Кепка / Шапка</div>
+        <div class="hint">Специальный стабилизатор</div>
+      </div>
+      <div class="fabric-card" onclick="selectFabric(this, 'towel')">
+        <div class="icon">🛁</div>
+        <div class="name">Махра / Полотенце</div>
+        <div class="hint">Стабилизатор + бумага</div>
+      </div>
+      <div class="fabric-card" onclick="selectFabric(this, 'denim')">
+        <div class="icon">👖</div>
+        <div class="name">Джинс / Брезент</div>
+        <div class="hint">Лёгкий отрывной</div>
+      </div>
+      <div class="fabric-card" onclick="selectFabric(this, 'synthetic')">
+        <div class="icon">✨</div>
+        <div class="name">Синтетика / Нейлон</div>
+        <div class="hint">Самоклеящийся</div>
+      </div>
+    </div>
+
+    <button class="btn btn-back" onclick="goTo(1)">← Назад</button>
+    <button class="btn" id="btn2" disabled onclick="goTo(3)">Далее — Расценки →</button>
+  </div>
+
+  <!-- ШАГ 3: Бизнес-параметры -->
+  <div class="step" id="step3">
+    <div class="progress">
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+    </div>
+    <p class="section-label">Шаг 3 из 3 — Ваши расценки</p>
+
+    <div class="form-card">
+      <div class="form-card-title">Ставка мастера</div>
+      <div class="field">
+        <label>Рублей в час</label>
+        <div class="range-value" id="rateVal">800 ₽</div>
+        <input type="range" id="rateRange" min="200" max="3000" step="50" value="800"
+          oninput="document.getElementById('rateVal').textContent = Number(this.value).toLocaleString('ru') + ' ₽'" />
+        <div class="range-labels"><span>200 ₽/час</span><span>3 000 ₽/час</span></div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-title">Наценка на материалы</div>
+      <div class="field">
+        <div class="range-value" id="markupVal">30%</div>
+        <input type="range" id="markupRange" min="0" max="150" step="5" value="30"
+          oninput="document.getElementById('markupVal').textContent = this.value + '%'" />
+        <div class="range-labels"><span>0%</span><span>150%</span></div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-title">Срочность заказа</div>
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="tgl-normal" onclick="setUrgency('normal', this)">Обычный</button>
+        <button class="toggle-btn" id="tgl-urgent" onclick="setUrgency('urgent', this)">Срочно ×1.5</button>
+      </div>
+    </div>
+
+    <button class="btn btn-back" onclick="goTo(2)">← Назад</button>
+    <button class="btn" onclick="calculate()" style="margin-top:10px">Рассчитать ✓</button>
+  </div>
+
+  <!-- ШАГ 4: Результат -->
+  <div class="step" id="step4">
+    <p class="section-label">Результат расчёта</p>
+
+    <div class="result-grid" id="resultGrid"></div>
+    <div class="detail-table" id="detailTable"></div>
+    <div id="tipBlock"></div>
+
+    <button class="btn btn-back" onclick="goTo(3)">← Изменить параметры</button>
+    <button class="btn btn-ghost" onclick="goTo(1)">Новый расчёт</button>
+  </div>
+
+</main>
+
+<script>
+  const state = { fabric: null, urgency: 'normal' };
+
+  const STAB = {
+    cotton:    { name: 'Отрывной (tear-away)',     pricePerSheet: 50,  note: '80 г/м²' },
+    knit:      { name: 'Клеевой (cut-away)',        pricePerSheet: 80,  note: '75 г/м²' },
+    cap:       { name: 'Водорастворимый',            pricePerSheet: 90,  note: 'для кепок' },
+    towel:     { name: 'Отрывной + вышивальная бумага', pricePerSheet: 65, note: '+ доп. слой' },
+    denim:     { name: 'Лёгкий отрывной',           pricePerSheet: 45,  note: '50 г/м²' },
+    synthetic: { name: 'Самоклеящийся',             pricePerSheet: 100, note: 'клеевой слой' },
+  };
+
+  const TIPS = {
+    cotton:    'Хлопок и лён хорошо держат стежок. Отрывной стабилизатор после вышивки легко удаляется.',
+    knit:      'Трикотаж тянется — клеевой стабилизатор фиксирует петли и не даёт дизайну деформироваться.',
+    cap:       'Для кепок нужен жёсткий козырьковый пяльца и водорастворимый стабилизатор поверх ткани.',
+    towel:     'Поверх махры кладём вышивальную бумагу — игла не путается в петлях, стежки чёткие.',
+    denim:     'Плотная ткань, достаточно лёгкого отрывного. Иглу поставь №90 или №100.',
+    synthetic: 'Самоклеящийся стабилизатор удобен для тонкой синтетики — ткань приклеивается поверх стабилизатора, уже закреплённого в пяльцах.',
+  };
+
+  function syncStitch(val, from) {
+    val = Math.max(500, Math.min(200000, Number(val) || 500));
+    if (from === 'input') {
+      document.getElementById('stitchRange').value = Math.min(100000, val);
+    } else {
+      document.getElementById('stitchInput').value = val;
+    }
+    document.getElementById('stitchVal').textContent = val.toLocaleString('ru');
+  }
+
+  function selectFabric(el, type) {
+    document.querySelectorAll('.fabric-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    state.fabric = type;
+    document.getElementById('btn2').disabled = false;
+  }
+
+  function setUrgency(type, btn) {
+    state.urgency = type;
+    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function goTo(n) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step' + n).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function fmt(n) { return Math.round(n).toLocaleString('ru'); }
+
+  function calculate() {
+    const stitches = Number(document.getElementById('stitchInput').value) || 10000;
+    const colors   = Number(document.getElementById('colorRange').value) || 3;
+    const w        = Number(document.getElementById('designW').value) || 100;
+    const h        = Number(document.getElementById('designH').value) || 80;
+    const rate     = Number(document.getElementById('rateRange').value) || 800;
+    const markup   = Number(document.getElementById('markupRange').value) || 30;
+    const urgent   = state.urgency === 'urgent';
+    const fabric   = state.fabric || 'cotton';
+
+    // ── Нитки (верхняя) ──────────────────────────
+    // ~12мм нити на стежок + 25% запас
+    const totalThread    = Math.ceil(stitches * 0.012 * 1.25);
+    const threadPerColor = Math.ceil(totalThread / colors);
+    // Катушка Madeira/Isacord = 1000м, шпуля = 200м
+    const spoolsPerColor = Math.ceil(threadPerColor / 1000);
+    const bobbinsPerColor = Math.ceil(threadPerColor / 200);
+
+    // ── Нижняя нить (бобина) ─────────────────────
+    const bobThread = Math.ceil(totalThread * 0.35);
+    const bobSpools = Math.ceil(bobThread / 200);
+
+    // ── Стабилизатор ─────────────────────────────
+    const padMm   = 60; // +3 см с каждой стороны
+    const areaCm2 = ((w + padMm) * (h + padMm)) / 100;
+    const a4Cm2   = 623; // 21 × 29.7 см
+    const sheets  = Math.ceil(areaCm2 / a4Cm2);
+    const stab    = STAB[fabric];
+    const stabCost = sheets * stab.pricePerSheet;
+
+    // ── Себестоимость ─────────────────────────────
+    const speed      = 700; // стежков/мин (средняя скорость)
+    const machineMin = Math.round(stitches / speed);
+    const laborCost  = Math.round((machineMin / 60) * rate);
+    const threadCost = Math.round(totalThread * 0.7); // ~0.7 руб/м нити
+    const matCost    = threadCost + stabCost;
+    const matMarked  = Math.round(matCost * (1 + markup / 100));
+    let total        = matMarked + laborCost;
+    if (urgent) total = Math.round(total * 1.5);
+
+    const urgentExtra = urgent ? total - (matMarked + laborCost) : 0;
+
+    // ── Отображение ──────────────────────────────
+    document.getElementById('resultGrid').innerHTML = `
+      <div class="result-card wide highlight">
+        <div>
+          <div class="r-label">Итоговая цена для клиента</div>
+          <div class="r-value">${fmt(total)} ₽</div>
+          ${urgent ? '<span class="badge">⚡ Срочный ×1.5</span>' : '<span class="badge" style="background:var(--nude);color:var(--gray)">Обычный заказ</span>'}
+        </div>
+        <div style="font-size:44px">🧵</div>
+      </div>
+
+      <div class="result-card">
+        <div class="r-icon">🪡</div>
+        <div class="r-label">Нить верхняя</div>
+        <div class="r-value">${fmt(totalThread)} м</div>
+        <div class="r-sub">${colors} цв. · ~${bobbinsPerColor} шт/цв (200м)</div>
+      </div>
+
+      <div class="result-card">
+        <div class="r-icon">🔵</div>
+        <div class="r-label">Нить нижняя</div>
+        <div class="r-value">${fmt(bobThread)} м</div>
+        <div class="r-sub">${bobSpools} шпул по 200 м</div>
+      </div>
+
+      <div class="result-card">
+        <div class="r-icon">📄</div>
+        <div class="r-label">Стабилизатор</div>
+        <div class="r-value">${sheets} л А4</div>
+        <div class="r-sub">${stab.name}</div>
+      </div>
+
+      <div class="result-card">
+        <div class="r-icon">⏱️</div>
+        <div class="r-label">Время вышивки</div>
+        <div class="r-value">${machineMin < 60 ? machineMin + ' мин' : (machineMin / 60).toFixed(1) + ' ч'}</div>
+        <div class="r-sub">~${speed} ст/мин</div>
+      </div>
+    `;
+
+    document.getElementById('detailTable').innerHTML = `
+      <div class="detail-title">Детализация стоимости</div>
+      <div class="detail-row">
+        <span class="k">Нитки (${fmt(totalThread)} м × 0,70 ₽)</span>
+        <span class="v">${fmt(threadCost)} ₽</span>
+      </div>
+      <div class="detail-row">
+        <span class="k">Стабилизатор (${sheets} л × ${stab.pricePerSheet} ₽)</span>
+        <span class="v">${fmt(stabCost)} ₽</span>
+      </div>
+      <div class="detail-row">
+        <span class="k">Наценка на материалы (${markup}%)</span>
+        <span class="v">+${fmt(matMarked - matCost)} ₽</span>
+      </div>
+      <div class="detail-row">
+        <span class="k">Работа мастера (${machineMin} мин × ${fmt(rate)} ₽/ч)</span>
+        <span class="v">${fmt(laborCost)} ₽</span>
+      </div>
+      ${urgent ? `<div class="detail-row"><span class="k">Срочность ×1,5</span><span class="v">+${fmt(urgentExtra)} ₽</span></div>` : ''}
+      <div class="detail-row">
+        <span class="k">Итого клиенту</span>
+        <span class="v">${fmt(total)} ₽</span>
+      </div>
+    `;
+
+    document.getElementById('tipBlock').innerHTML = `
+      <div class="tip">
+        <b>Совет по стабилизатору:</b> ${TIPS[fabric]}
+      </div>
+    `;
+
+    goTo(4);
+  }
+</script>
+</body>
+</html>
